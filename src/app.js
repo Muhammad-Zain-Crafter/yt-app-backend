@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 
 const app = express();
 app.use(cors({
-    origin: process.env.CORS_ORGIGN,
+    origin: process.env.CORS_ORIGIN,
     credentials: true
 }));
 app.use(express.json({  // built-in middleware
@@ -16,5 +16,23 @@ app.use(express.urlencoded({ // encodeed data that comes from url
 }))
 app.use(express.static('public')); // for serving static files
 app.use(cookieParser()); // for parsing cookies
+
+
+// import routes
+import userRouter from './routes/user.route.js';
+
+// routes declaration
+app.use("/api/v1/users", userRouter)
+
+
+
+
+
+
+
+
+
+
+
 
 export default app;
