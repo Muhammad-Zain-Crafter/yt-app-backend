@@ -1,6 +1,6 @@
 import mongoose, {mongo, Schema} from "mongoose";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import bcrypt from 'bcrypt';
 
 const userSchema = new Schema({
         username: {
@@ -14,6 +14,7 @@ const userSchema = new Schema({
         email: {
             type: String,
             required: true,
+            unique: true,
             trim: true
         },
         fullName: {
@@ -52,6 +53,7 @@ userSchema.pre("save", async function(next) {
         return next();  
     }
     this.password = await bcrypt.hash(this.passsword, 5) // encoded password
+    next();
 })
 
 // inject methods:

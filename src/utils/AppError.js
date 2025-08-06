@@ -1,5 +1,3 @@
-import { captureOwnerStack } from "react";
-
 class ApiError extends Error {
     constructor(
         statusCode, 
