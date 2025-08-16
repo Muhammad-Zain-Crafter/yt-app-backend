@@ -3,7 +3,7 @@ import { ApiError } from "../utils/AppError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken"
 
 const generateAccessandRefreshToken = async (userId) => {
   try {
@@ -241,7 +241,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   ))
 })
 
-const userDetail = asyncHandler(async (req, res) => {
+const updateAccountDetails = asyncHandler(async (req, res) => {
   const {fullName, email} = req.body
   
   if (!fullName || !email) {
@@ -330,7 +330,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     throw new ApiError(400, "username is missing")
   }
 
-  const channel = User.aggregate([
+  const channel = await User.aggregate([
     {
       // Find the user document whose username matches the one in the URL
       $match: {
@@ -402,6 +402,63 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   ))
 })
 
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: req.user._id
+      },
+    },
+    {
+      $lookup: {
+        from: "videos", // target collection to join (videos)
+        localField: "watchHistory", // user’s field storing references (watchHistory IDs)
+        foreignField: "_id", // field in videos to match with (_id)
+        as: "watchHistory", // new field name to store
+
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner" // return object of owner (extracts just the first document from that array.)
+              }
+            }
+          }
+        ]
+
+      }
+
+    }
+  ])
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(
+      200,
+      user[0].watchHistory,
+      "watch history fetched successfully"
+    )
+  )
+})
+
 export {
     resgisterUser,
     loginUser,
@@ -409,8 +466,9 @@ export {
     accessRefreshToken,
     changePassword,
     getCurrentUser,
-    userDetail,
+    updateAccountDetails,
     changeAvatar,
     changeCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
   };
