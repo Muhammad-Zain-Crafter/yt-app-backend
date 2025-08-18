@@ -46,11 +46,11 @@ router.route("/update-account").patch( // PATCH is the correct HTTP method when 
     verifyJWT, updateAccountDetails
 )
 
-router.route("/avatar").patch(
+router.route("/change-avatar").patch(
     verifyJWT, upload.single("avatar"), changeAvatar
 )
 
-router.route("/cover-image").patch(
+router.route("/change-coverImage").patch(
     verifyJWT, upload.single("coverImage"), changeCoverImage
 )
 
@@ -58,7 +58,7 @@ router.route("/channel/:username").get(  // from params
     verifyJWT, getUserChannelProfile
 )
 
-router.route("/watch-history").get(
+router.route("/history").get(
     verifyJWT, getWatchHistory
 )
 

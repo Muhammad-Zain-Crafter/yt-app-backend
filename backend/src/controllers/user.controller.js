@@ -151,9 +151,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, {
-    $set: {
-      // Find the document, and set the given field(s) to the specified value.
-      refreshToken: undefined,
+    $unset: {
+      refreshToken: 1 // this removes the field from document
     },
   });
   const options = {
@@ -302,7 +301,7 @@ const changeCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "cover image file is missing")
   }
   const coverImage = await uploadOnCloudinary(coverImageLocalPath)
-  if (!avatar.url) {
+  if (!coverImage.url) {
     throw new ApiError(400, "error while uploading cover image")
   }
 
@@ -362,7 +361,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
           $size: "$subscribers"
         },
         channelSubscribedToCount: {
-          $size: "subscribedTo"
+          $size: "$subscribedTo"
         },
         // Check if req.user._id exists inside subscribers.subscriber array
         isSubscribed: {

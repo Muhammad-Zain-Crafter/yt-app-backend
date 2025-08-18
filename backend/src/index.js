@@ -1,8 +1,10 @@
-import connectDB from "./db/database.js";
 import dotenv from "dotenv";
+dotenv.config();
+
+import connectDB from "./db/database.js";
 import app from "./app.js";
 
-dotenv.config();
+
 
 connectDB() // return a promise (async function)
 .then(() => {
