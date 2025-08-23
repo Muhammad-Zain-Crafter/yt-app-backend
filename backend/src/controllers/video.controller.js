@@ -125,7 +125,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     }
   );
   const videoAggregate = await Video.aggregate(pipeline);
- 
+
   const options = {
     page: parseInt(page, 10),
     limit: parseInt(limit, 10),
@@ -133,14 +133,135 @@ const getAllVideos = asyncHandler(async (req, res) => {
   const video = await Video.aggregatePaginate(videoAggregate, options);
 
   return res
-        .status(200)
-        .json(new ApiResponse(200, video, "Videos fetched successfully"));
-
+    .status(200)
+    .json(new ApiResponse(200, video, "Videos fetched successfully"));
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: get video by id
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "invalid video id");
+  }
+
+  if (!isValidObjectId(req.user?._id)) {
+    throw new ApiError(400, "invalid user id");
+  }
+
+  const video = await Video.aggregate([
+    {
+      $match: {
+        _id: mongoose.Types.ObjectId(videoId),
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipliner: [
+          {
+            $lookup: {
+              from: "subscriptions",
+              localField: "_id",
+              foreignField: "channel",
+              as: "subscribers",
+            },
+          },
+          {
+            addfields: {
+              subscribersCount: { $size: "$subscribers" },
+              // Check if req.user._id exists inside subscribers.subscriber array
+              isSubscribed: {
+                $cond: {
+                  if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                  then: true,
+                  else: false,
+                },
+              },
+            },
+          },
+          {
+            $project: {
+              username: 1,
+              "avatar.url": 1,
+              subscribersCount: 1,
+              isSubscribed: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        likesCount: {
+          $size: "$likes",
+        },
+        ownser: {
+          $first: "$owner",
+        },
+        isLiked: {
+          $cond: {
+            if: { $in: [req.user_id, "$likes.likedBy"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        "videoFile.url": 1,
+        title: 1,
+        description: 1,
+        views: 1,
+        createdAt: 1,
+        duration: 1,
+        comments: 1,
+        owner: 1,
+        likesCount: 1,
+        isLiked: 1,
+      },
+    },
+  ]);
+  if (!video) {
+    throw new ApiError(400, "failed to fetch video");
+  }
+  
+  // increment views if video fetched successfully
+  await Video.findByIdAndUpdate(videoId, 
+    {
+      $inc: {
+        views: 1
+      }
+    }
+  )
+  // add this video to user watch history
+  await User.findByIdAndUpdate(req.user?._id,
+    {
+      $addToSet: {
+        // addToSet adds the value to the array only if it doesn't already exist
+        watchHistory: videoId 
+      }
+    }
+  )
+  return res
+        .status(200)
+        .json(
+            new ApiResponse(
+              200,
+              video[0],
+              "video details fetched successfully")
+        );
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
