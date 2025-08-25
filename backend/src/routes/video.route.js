@@ -1,8 +1,7 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { getAllVideos, getVideoById, publishVideo } from "../controllers/video.controller.js";
-
+import { deleteVideo, getAllVideos, getVideoById, publishVideo, togglePublishStatus, updateVideo } from "../controllers/video.controller.js";
 
 const router = Router();
 
@@ -14,12 +13,16 @@ router.route("/publish-video").post(
     ]), publishVideo
 )
 
-router.route("/get-videos").get(
-    verifyJWT, getAllVideos
+// no auth required
+router.route("/get-allVideos").get(
+    getAllVideos
 )
 
-router.route("/get-videoById").get(
-    verifyJWT, getVideoById
-)
+router.route("/v/:videoId")
+.get(verifyJWT, getVideoById)
+.delete(verifyJWT, deleteVideo)
+.patch(verifyJWT, upload.single("thumbnail"), updateVideo)
+
+router.route("/toggle/publish/:videoId").patch(verifyJWT, togglePublishStatus);
 
 export default router;
