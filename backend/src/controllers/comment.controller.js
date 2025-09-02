@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
-import { Comment, Video, Like } from "../models/comment.model.js";
+import { Comment } from "../models/comment.model.js";
+import { Video } from "../models/video.model.js"
+import { Like } from "../models/like.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -14,10 +16,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
     throw new ApiError(404, "video not found");
   }
 
-  const commentAggregate = await Comment.aggregate([
+  const commentAggregate = Comment.aggregate([
     {
       $match: {
-        video: mongoose.Types.ObjectId(videoId),
+        video: new mongoose.Types.ObjectId(videoId),
       },
     },
     {
