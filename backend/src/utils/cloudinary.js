@@ -20,7 +20,7 @@ const uploadOnCloudinary = async (filePath) => {
     });
     // console.log("File uploaded successfully on cloudinary", response.url);
 
-     // ✅ Delete local file after upload
+     // Delete local file after upload
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }

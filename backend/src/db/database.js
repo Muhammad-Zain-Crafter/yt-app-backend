@@ -4,7 +4,7 @@ const db_name = "advance_backend_project";
 const connectDB = async () => {
   try {
     const connectionInstance = await mongoose.connect(
-      `${process.env.MONGODB_URI}/${db_name}`
+      `${process.env.MONGODB_URL}/${db_name}`
     );
     console.log(`MongoDB connected: ${connectionInstance.connection.host}`);
     console.log("Database Name in Use:", connectionInstance.connection.name);
