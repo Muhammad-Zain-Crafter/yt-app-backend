@@ -17,6 +17,9 @@ app.use(express.urlencoded({ // encodeed data that comes from url
 app.use(express.static('public')); // for serving static files
 app.use(cookieParser()); // for parsing cookies
 
+app.get("/", (req, res) => {
+  res.send("🚀 API is working!");
+});
 
 // import routes
 import userRouter from './routes/user.route.js';
